@@ -107,17 +107,30 @@ def train(args):
         new_state_dict = {}
 
         for k, v in state_dict.items():
-            # SimCLR saves backbone.*; we only want convolutional/residual layers
-            if k.startswith('backbone.') and not k.startswith('backbone.fc'):
-                new_key = k[len('backbone.'):]  # remove prefix
-                new_state_dict[new_key] = v
+            # Common SimCLR formats
+            for prefix in [
+                "backbone.",          # your ResNetSimCLR backbone
+                "encoder.",           # some SimCLR implementations
+                "model.backbone.",    # some wrappers
+                "module.backbone.",   # DDP variant
+                "module.encoder_q.",  # MoCo/SimCLR variant
+                "module."             # plain DDP
+            ]:
+                if k.startswith(prefix):
+                    k = k[len(prefix):]
+
+            # skip the MLP projection head
+            if k.startswith("fc.") or "projection" in k:
+                continue
+
+            new_state_dict[k] = v
 
         model_dict = model.state_dict()
 
         pretrained_dict = {
-	        k: v for k, v in new_state_dict.items()
-	        if k in model_dict and model_dict[k].shape == v.shape
-	    }
+            k: v for k, v in new_state_dict.items()
+            if k in model_dict and model_dict[k].shape == v.shape
+        }
 
         model_dict.update(pretrained_dict)
         model.load_state_dict(model_dict, strict=False)
