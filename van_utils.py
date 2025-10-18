@@ -176,6 +176,13 @@ def _conv_filter(state_dict, patch_size=16):
 
     return out_dict
 
+model_urls = {
+    "van_b0": "https://huggingface.co/Visual-Attention-Network/VAN-Tiny-original/resolve/main/van_tiny_754.pth.tar",
+    "van_b1": "https://huggingface.co/Visual-Attention-Network/VAN-Small-original/resolve/main/van_small_811.pth.tar",
+    "van_b2": "https://huggingface.co/Visual-Attention-Network/VAN-Base-original/resolve/main/van_base_828.pth.tar",
+    "van_b3": "https://huggingface.co/Visual-Attention-Network/VAN-Large-original/resolve/main/van_large_839.pth.tar",
+}
+
 def load_model_weights(model, arch, num_classes):
     url = model_urls[arch]
     checkpoint = torch.hub.load_state_dict_from_url(
