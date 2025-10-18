@@ -119,6 +119,12 @@ class VAN(nn.Module):
         x = self.head(x)
         return x
 
+model_urls = {
+    "van_b0": "https://huggingface.co/Visual-Attention-Network/VAN-Tiny-original/resolve/main/van_tiny_754.pth.tar",
+    "van_b1": "https://huggingface.co/Visual-Attention-Network/VAN-Small-original/resolve/main/van_small_811.pth.tar",
+    "van_b2": "https://huggingface.co/Visual-Attention-Network/VAN-Base-original/resolve/main/van_base_828.pth.tar",
+    "van_b3": "https://huggingface.co/Visual-Attention-Network/VAN-Large-original/resolve/main/van_large_839.pth.tar",
+}
 
 def get_model(args):
     """
@@ -138,15 +144,13 @@ def get_model(args):
 
     elif args.model_name == 'van':
         model = VAN(
-            embed_dims=[32, 64, 160, 256],
-            mlp_ratios=[8, 8, 4, 4],
-            num_classes=num_classes,
-            norm_layer=partial(nn.LayerNorm, eps=1e-6),
-            depths=[3, 3, 5, 2],
-            num_stages=4
-        )
+            embed_dims=[32, 64, 160, 256], mlp_ratios=[8, 8, 4, 4],
+            norm_layer=partial(nn.LayerNorm, eps=1e-6), depths=[3, 3, 5, 2],
+            **args)
         model.default_cfg = _cfg()
-        # model = load_model_weights(model, "van_b0")
+        if pretrained:
+            model = load_model_weights(model, "van_b0", args)
+        return model
 
     else:
         raise ValueError(f"Unknown model name: {args.model_name}")

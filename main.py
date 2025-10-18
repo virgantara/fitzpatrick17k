@@ -98,56 +98,56 @@ def train(args):
     model = get_model(args)
 
     # --- Load pretrained SimCLR model ---
-    if args.simclr_ckpt and os.path.exists(args.simclr_ckpt):
-        print(f"Loading pretrained SimCLR weights from {args.simclr_ckpt}")
-        ckpt = torch.load(args.simclr_ckpt, map_location=device)
+    # if args.simclr_ckpt and os.path.exists(args.simclr_ckpt):
+    #     print(f"Loading pretrained SimCLR weights from {args.simclr_ckpt}")
+    #     ckpt = torch.load(args.simclr_ckpt, map_location=device)
 
-        # Try to load only matching keys (in case projection head differs)
-        state_dict = ckpt.get('state_dict', ckpt)
-        new_state_dict = {}
+    #     # Try to load only matching keys (in case projection head differs)
+    #     state_dict = ckpt.get('state_dict', ckpt)
+    #     new_state_dict = {}
 
-        for k, v in state_dict.items():
-            # Common SimCLR formats
-            for prefix in [
-                "backbone.",          # your ResNetSimCLR backbone
-                "encoder.",           # some SimCLR implementations
-                "model.backbone.",    # some wrappers
-                "module.backbone.",   # DDP variant
-                "module.encoder_q.",  # MoCo/SimCLR variant
-                "module."             # plain DDP
-            ]:
-                if k.startswith(prefix):
-                    k = k[len(prefix):]
+    #     for k, v in state_dict.items():
+    #         # Common SimCLR formats
+    #         for prefix in [
+    #             "backbone.",          # your ResNetSimCLR backbone
+    #             "encoder.",           # some SimCLR implementations
+    #             "model.backbone.",    # some wrappers
+    #             "module.backbone.",   # DDP variant
+    #             "module.encoder_q.",  # MoCo/SimCLR variant
+    #             "module."             # plain DDP
+    #         ]:
+    #             if k.startswith(prefix):
+    #                 k = k[len(prefix):]
 
-            # skip the MLP projection head
-            if k.startswith("fc.") or "projection" in k:
-                continue
+    #         # skip the MLP projection head
+    #         if k.startswith("fc.") or "projection" in k:
+    #             continue
 
-            new_state_dict[k] = v
+    #         new_state_dict[k] = v
 
-        model_dict = model.state_dict()
+    #     model_dict = model.state_dict()
 
-        pretrained_dict = {
-            k: v for k, v in new_state_dict.items()
-            if k in model_dict and model_dict[k].shape == v.shape
-        }
+    #     pretrained_dict = {
+    #         k: v for k, v in new_state_dict.items()
+    #         if k in model_dict and model_dict[k].shape == v.shape
+    #     }
 
-        model_dict.update(pretrained_dict)
-        model.load_state_dict(model_dict, strict=False)
-        print(f"Loaded {len(pretrained_dict)} matching layers from SimCLR checkpoint.")
-    else:
-        print("No SimCLR checkpoint provided or file not found. Training from scratch.")
+    #     model_dict.update(pretrained_dict)
+    #     model.load_state_dict(model_dict, strict=False)
+    #     print(f"Loaded {len(pretrained_dict)} matching layers from SimCLR checkpoint.")
+    # else:
+    #     print("No SimCLR checkpoint provided or file not found. Training from scratch.")
 
-    # --- Replace projection head with classifier ---
-    if hasattr(model, 'fc'):  # for resnet-based backbones
-        in_features = model.fc.in_features
-        model.fc = nn.Sequential(
-            nn.Dropout(p=0.2),
-            nn.Linear(in_features, args.num_classes)
-        )
-    elif hasattr(model, 'head'):  # for VAN or ViT-style models
-        in_features = model.head.in_features
-        model.head = nn.Linear(in_features, args.num_classes)
+    # # --- Replace projection head with classifier ---
+    # if hasattr(model, 'fc'):  # for resnet-based backbones
+    #     in_features = model.fc.in_features
+    #     model.fc = nn.Sequential(
+    #         nn.Dropout(p=0.2),
+    #         nn.Linear(in_features, args.num_classes)
+    #     )
+    # elif hasattr(model, 'head'):  # for VAN or ViT-style models
+    #     in_features = model.head.in_features
+    #     model.head = nn.Linear(in_features, args.num_classes)
 
     # --- Optionally freeze lower layers ---
     if args.freeze_backbone:
