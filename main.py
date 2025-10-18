@@ -113,6 +113,9 @@ def train(args):
             model_dict[k.replace('backbone.', '')].shape == v.shape
         }
 
+        ckpt = torch.load("checkpoint_best.pth", map_location='cpu')
+        print(list(ckpt.keys())[:20])
+
         model_dict.update(pretrained_dict)
         model.load_state_dict(model_dict, strict=False)
         print(f"Loaded {len(pretrained_dict)} matching layers from SimCLR checkpoint.")
