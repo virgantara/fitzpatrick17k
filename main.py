@@ -96,47 +96,48 @@ def train(args):
                              shuffle=False, num_workers=8)
 
     model = get_model(args).to(device)
-    
 
+    # --- Load pretrained SimCLR model ---
     if args.simclr_ckpt and os.path.exists(args.simclr_ckpt):
-	    print(f"Loading pretrained SimCLR weights from {args.simclr_ckpt}")
-	    ckpt = torch.load(args.simclr_ckpt, map_location=device)
-	    
-	    # Try to load only matching keys (in case projection head differs)
-	    state_dict = ckpt.get('state_dict', ckpt)
-	    model_dict = model.state_dict()
+        print(f"Loading pretrained SimCLR weights from {args.simclr_ckpt}")
+        ckpt = torch.load(args.simclr_ckpt, map_location=device)
 
-	    # Filter out unmatched keys (e.g., SimCLR projection MLP)
-	    pretrained_dict = {k.replace('backbone.', ''): v for k, v in state_dict.items()
-	                       if k.replace('backbone.', '') in model_dict and
-	                       model_dict[k.replace('backbone.', '')].shape == v.shape}
+        # Try to load only matching keys (in case projection head differs)
+        state_dict = ckpt.get('state_dict', ckpt)
+        model_dict = model.state_dict()
 
-	    model_dict.update(pretrained_dict)
-	    model.load_state_dict(model_dict, strict=False)
-	    print(f"Loaded {len(pretrained_dict)} matching layers from SimCLR checkpoint.")
-	else:
-		print("No SimCLR checkpoint provided or file not found. Training from scratch.")
+        # Filter out unmatched keys (e.g., SimCLR projection MLP)
+        pretrained_dict = {
+            k.replace('backbone.', ''): v for k, v in state_dict.items()
+            if k.replace('backbone.', '') in model_dict and
+            model_dict[k.replace('backbone.', '')].shape == v.shape
+        }
 
-	# --- Replace projection head with classifier ---
-	if hasattr(model, 'fc'):  # for resnet-based backbones
-		in_features = model.fc.in_features
-		model.fc = nn.Sequential(
-	        nn.Dropout(p=0.2),
-	        nn.Linear(in_features, args.num_classes)
-	    )
+        model_dict.update(pretrained_dict)
+        model.load_state_dict(model_dict, strict=False)
+        print(f"Loaded {len(pretrained_dict)} matching layers from SimCLR checkpoint.")
+    else:
+        print("No SimCLR checkpoint provided or file not found. Training from scratch.")
 
-	elif hasattr(model, 'head'):  # for VAN or ViT-style models
-		in_features = model.head.in_features
-		model.head = nn.Linear(in_features, args.num_classes)
+    # --- Replace projection head with classifier ---
+    if hasattr(model, 'fc'):  # for resnet-based backbones
+        in_features = model.fc.in_features
+        model.fc = nn.Sequential(
+            nn.Dropout(p=0.2),
+            nn.Linear(in_features, args.num_classes)
+        )
+    elif hasattr(model, 'head'):  # for VAN or ViT-style models
+        in_features = model.head.in_features
+        model.head = nn.Linear(in_features, args.num_classes)
 
-	# --- Optionally freeze lower layers ---
-	if args.freeze_backbone:
-		for name, param in model.named_parameters():
-			if 'fc' not in name and 'head' not in name:
-				param.requires_grad = False
-		print("Backbone frozen, training only classifier head.")
+    # --- Optionally freeze lower layers ---
+    if args.freeze_backbone:
+        for name, param in model.named_parameters():
+            if 'fc' not in name and 'head' not in name:
+                param.requires_grad = False
+        print("Backbone frozen, training only classifier head.")
 
-	wandb.watch(model)
+    wandb.watch(model)
 
     total_params = sum(p.numel() for p in model.parameters())
     trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
@@ -203,8 +204,8 @@ def train(args):
 
         wandb_log.update({
             'Train Loss': train_loss,
-            'Train Precision': train_precision,
-            'Train Recall': train_recall,
+            # 'Train Precision': train_precision,
+            # 'Train Recall': train_recall,
             'Train F1': train_f1,
             'Train Acc': train_acc
         })
@@ -255,8 +256,8 @@ def train(args):
 
         wandb_log.update({
             'Test Loss': test_loss,
-            'Test Precision': test_precision,
-            'Test Recall': test_recall,
+            # 'Test Precision': test_precision,
+            # 'Test Recall': test_recall,
             'Test F1': test_f1,
             'Test Acc': test_acc
         })
@@ -268,30 +269,30 @@ def train(args):
               f"Train F1: {train_f1:.3f} | Test F1: {test_f1:.3f}")
 
     # --- Plot curves ---
-    plt.figure(figsize=(10, 4))
+    # plt.figure(figsize=(10, 4))
 
-    # Loss
-    plt.subplot(1, 2, 1)
-    plt.plot(train_loss_list, label='Train Loss')
-    plt.plot(test_loss_list, label='Test Loss')
-    plt.xlabel('Epoch')
-    plt.ylabel('Loss')
-    plt.title('Loss over Epochs')
-    plt.legend()
-    plt.grid(True)
+    # # Loss
+    # plt.subplot(1, 2, 1)
+    # plt.plot(train_loss_list, label='Train Loss')
+    # plt.plot(test_loss_list, label='Test Loss')
+    # plt.xlabel('Epoch')
+    # plt.ylabel('Loss')
+    # plt.title('Loss over Epochs')
+    # plt.legend()
+    # plt.grid(True)
 
-    # Accuracy
-    plt.subplot(1, 2, 2)
-    plt.plot(train_acc_list, label='Train Accuracy')
-    plt.plot(test_acc_list, label='Test Accuracy')
-    plt.xlabel('Epoch')
-    plt.ylabel('Accuracy (%)')
-    plt.title('Accuracy over Epochs')
-    plt.legend()
-    plt.grid(True)
+    # # Accuracy
+    # plt.subplot(1, 2, 2)
+    # plt.plot(train_acc_list, label='Train Accuracy')
+    # plt.plot(test_acc_list, label='Test Accuracy')
+    # plt.xlabel('Epoch')
+    # plt.ylabel('Accuracy (%)')
+    # plt.title('Accuracy over Epochs')
+    # plt.legend()
+    # plt.grid(True)
 
-    plt.tight_layout()
-    plt.show()
+    # plt.tight_layout()
+    # plt.show()
 
 
 if __name__ == '__main__':
@@ -311,8 +312,9 @@ if __name__ == '__main__':
     parser.add_argument('--seed', type=int, default=42)
     parser.add_argument('--fold', type=int, default=1)
     parser.add_argument('--simclr_ckpt', type=str, default=None,
-                    help='Path to pretrained SimCLR checkpoint (.pth)')
-	parser.add_argument('--freeze_backbone', action='store_true',
-	                    help='Freeze backbone and train only classification head')
+                        help='Path to pretrained SimCLR checkpoint (.pth)')
+    parser.add_argument('--freeze_backbone', action='store_true',
+                        help='Freeze backbone and train only classification head')
+
     args = parser.parse_args()
     train(args)
