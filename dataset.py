@@ -2,6 +2,7 @@ from torch.utils.data import Dataset
 from tqdm import tqdm
 from PIL import Image
 import pandas as pd
+import os
 
 class Fitzpatrick17kDataset(Dataset):
     def __init__(self, csv_file, img_dir, transform=None, target_transform=None, img_ext=".jpg"):
