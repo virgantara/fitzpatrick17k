@@ -309,6 +309,9 @@ if __name__ == '__main__':
     parser.add_argument('--no_cuda', action='store_true')
     parser.add_argument('--seed', type=int, default=42)
     parser.add_argument('--fold', type=int, default=1)
-
+    parser.add_argument('--simclr_ckpt', type=str, default=None,
+                    help='Path to pretrained SimCLR checkpoint (.pth)')
+	parser.add_argument('--freeze_backbone', action='store_true',
+	                    help='Freeze backbone and train only classification head')
     args = parser.parse_args()
     train(args)
