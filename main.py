@@ -89,7 +89,7 @@ set_seed(SEED)
 
 csv_path = 'fitzpatrick17k.csv'
 img_dir = 'dataset/fitzpatrick17k'
-img_dir.mkdir(parents=True, exist_ok=True)
+os.makedirs(img_dir, exist_ok=True)
 
 transform = transforms.Compose([
     transforms.Resize((256, 256)),  # Resize a bit larger
