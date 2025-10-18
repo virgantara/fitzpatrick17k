@@ -44,7 +44,7 @@ def download_dataset():
 
 
 def train(args):
-
+	wandb.init(project="SkinDisease", name=args.exp_name)
 	SEED = 42
 	set_seed(SEED)
 
@@ -98,13 +98,14 @@ def train(args):
 	device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
-	BATCH_SIZE = args.batch_size
 	train_loader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True, num_workers=8)
 	test_loader = DataLoader(test_dataset, batch_size=args.test_batch_size, shuffle=False, num_workers=8)
 
 	model = get_model(args)
 
 	model = model.to(device)
+
+	wandb.watch(model)
 
 	total_params = sum(p.numel() for p in model.parameters())
     trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
@@ -136,6 +137,8 @@ def train(args):
 
 	scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=30, gamma=0.1)
 	for epoch in range(NUM_EPOCHS): 
+		wandb_log = {}
+
 	    model.train()
 	    correct_train, total_train = 0, 0
 
@@ -176,6 +179,12 @@ def train(args):
 	    train_precision_list.append(train_precision)
 	    train_recall_list.append(train_recall)
 	    train_f1_list.append(train_f1)
+
+	    wandb_log['Train Loss'] = train_loss
+        wandb_log['Train Precision'] = train_precision
+        wandb_log['Train F1'] = train_f1
+        wandb_log['Train Recall'] = train_recall
+        wandb_log['Train Acc'] = train_acc
 	    
 	    model.eval()
 	    correct_test, total_test = 0, 0
@@ -219,6 +228,12 @@ def train(args):
 	        best_f1 = test_f1
 	        torch.save(model.state_dict(), 'best_model_f1.pt')
 
+	    wandb_log['Test Loss'] = test_loss
+        wandb_log['Test Precision'] = test_precision
+        wandb_log['Test F1'] = test_f1
+        wandb_log['Test Recall'] = test_recall
+        wandb_log['Test Acc'] = test_acc
+        wandb.log(wandb_log)
 	    print(f"Epoch [{epoch+1}/{NUM_EPOCHS}] - "
 	          f"Train Acc: {train_acc:.2f}% | Test Acc: {test_acc:.2f}% | "
 	          f"Train F1: {train_f1:.3f} | Test F1: {test_f1:.3f}")
