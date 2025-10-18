@@ -115,25 +115,26 @@ def train(args):
 	    model.load_state_dict(model_dict, strict=False)
 	    print(f"Loaded {len(pretrained_dict)} matching layers from SimCLR checkpoint.")
 	else:
-	    print("No SimCLR checkpoint provided or file not found. Training from scratch.")
+		print("No SimCLR checkpoint provided or file not found. Training from scratch.")
 
 	# --- Replace projection head with classifier ---
 	if hasattr(model, 'fc'):  # for resnet-based backbones
-	    in_features = model.fc.in_features
-	    model.fc = nn.Sequential(
+		in_features = model.fc.in_features
+		model.fc = nn.Sequential(
 	        nn.Dropout(p=0.2),
 	        nn.Linear(in_features, args.num_classes)
 	    )
+
 	elif hasattr(model, 'head'):  # for VAN or ViT-style models
-	    in_features = model.head.in_features
-	    model.head = nn.Linear(in_features, args.num_classes)
+		in_features = model.head.in_features
+		model.head = nn.Linear(in_features, args.num_classes)
 
 	# --- Optionally freeze lower layers ---
 	if args.freeze_backbone:
-	    for name, param in model.named_parameters():
-	        if 'fc' not in name and 'head' not in name:
-	            param.requires_grad = False
-	    print("Backbone frozen, training only classifier head.")
+		for name, param in model.named_parameters():
+			if 'fc' not in name and 'head' not in name:
+				param.requires_grad = False
+		print("Backbone frozen, training only classifier head.")
 
 	wandb.watch(model)
 
