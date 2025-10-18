@@ -21,20 +21,20 @@ def set_seed(seed=42):
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.benchmark = False
 
-# !pip install gdown
-import gdown
-# url = 'https://drive.google.com/file/d/1AYMLQNb7cqNjSEXTFgqNTWthKxoRmkE9/view?usp=sharing'
+# # !pip install gdown
+# import gdown
+# # url = 'https://drive.google.com/file/d/1AYMLQNb7cqNjSEXTFgqNTWthKxoRmkE9/view?usp=sharing'
 
-file_id = "1AYMLQNb7cqNjSEXTFgqNTWthKxoRmkE9"
-url = f"https://drive.google.com/uc?id={file_id}"
+# file_id = "1AYMLQNb7cqNjSEXTFgqNTWthKxoRmkE9"
+# url = f"https://drive.google.com/uc?id={file_id}"
 
-output = "dataset.zip"  # or your file name
-gdown.download(url, output, quiet=False)
+# output = "dataset.zip"  # or your file name
+# gdown.download(url, output, quiet=False)
 
-import zipfile
+# import zipfile
 
-with zipfile.ZipFile(output, 'r') as zip_ref:
-    zip_ref.extractall('dataset')  # Extract into 'dataset' folder
+# with zipfile.ZipFile(output, 'r') as zip_ref:
+#     zip_ref.extractall('dataset')  # Extract into 'dataset' folder
 
 
 class Fitzpatrick17kDataset(Dataset):
@@ -88,7 +88,7 @@ SEED = 42
 set_seed(SEED)
 
 csv_path = 'fitzpatrick17k.csv'
-img_dir = 'dataset/data/fitzpatrick17k'
+img_dir = 'dataset/data/finalfitz17k'
 os.makedirs(img_dir, exist_ok=True)
 
 transform = transforms.Compose([
