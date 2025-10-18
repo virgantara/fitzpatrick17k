@@ -146,7 +146,7 @@ def get_model(args):
             num_stages=4
         )
         model.default_cfg = _cfg()
-        model = load_model_weights(model, "van_b0")
+        # model = load_model_weights(model, "van_b0")
 
     else:
         raise ValueError(f"Unknown model name: {args.model_name}")
