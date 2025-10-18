@@ -88,7 +88,7 @@ SEED = 42
 set_seed(SEED)
 
 csv_path = 'fitzpatrick17k.csv'
-img_dir = 'dataset'
+img_dir = 'dataset/fitzpatrick17k'
 
 transform = transforms.Compose([
     transforms.Resize((256, 256)),  # Resize a bit larger
