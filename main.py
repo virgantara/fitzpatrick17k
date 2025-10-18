@@ -27,6 +27,13 @@ def set_seed(seed=42):
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.benchmark = False
 
+def _init_(args):
+    if not os.path.exists('checkpoints'):
+        os.makedirs('checkpoints')
+    if not os.path.exists('checkpoints/' + args.exp_name):
+        os.makedirs('checkpoints/' + args.exp_name)
+    if not os.path.exists('checkpoints/' + args.exp_name + '/' + 'models'):
+        os.makedirs('checkpoints/' + args.exp_name + '/' + 'models')
 
 def download_dataset():
     file_id = "1AYMLQNb7cqNjSEXTFgqNTWthKxoRmkE9"
@@ -268,11 +275,15 @@ def train(args):
         # --- Save best models ---
         if test_acc > best_acc:
             best_acc = test_acc
-            torch.save(model.state_dict(), best_model_path)
+            # torch.save(model.state_dict(), best_model_path)
+            torch.save(model.state_dict(), 'checkpoints/%s/models/model_acc.t7' % args.exp_name)
+        torch.save(model.state_dict(), 'checkpoints/%s/models/model_acc_final.t7' % args.exp_name)
 
         if test_f1 > best_f1:
             best_f1 = test_f1
-            torch.save(model.state_dict(), 'best_model_f1.pt')
+            # torch.save(model.state_dict(), 'best_model_f1.pt')
+            torch.save(model.state_dict(), 'checkpoints/%s/models/model_f1.t7' % args.exp_name)
+        torch.save(model.state_dict(), 'checkpoints/%s/models/model_f1_final.t7' % args.exp_name)
 
         wandb_log.update({
             'Test Loss': test_loss,
@@ -339,4 +350,5 @@ if __name__ == '__main__':
                         help='Freeze backbone and train only classification head')
 
     args = parser.parse_args()
+    _init_(args)
     train(args)
