@@ -104,17 +104,20 @@ def train(args):
 
         # Try to load only matching keys (in case projection head differs)
         state_dict = ckpt.get('state_dict', ckpt)
-        model_dict = model.state_dict()
+        new_state_dict = {}
 
-        # Filter out unmatched keys (e.g., SimCLR projection MLP)
+	    for k, v in state_dict.items():
+	        # SimCLR saves backbone.*; we only want convolutional/residual layers
+	        if k.startswith('backbone.') and not k.startswith('backbone.fc'):
+	            new_key = k[len('backbone.'):]  # remove prefix
+	            new_state_dict[new_key] = v
+
+	    model_dict = model.state_dict()
+
         pretrained_dict = {
-            k.replace('backbone.', ''): v for k, v in state_dict.items()
-            if k.replace('backbone.', '') in model_dict and
-            model_dict[k.replace('backbone.', '')].shape == v.shape
-        }
-
-        ckpt = torch.load("checkpoint_best.pth", map_location='cpu')
-        print(list(ckpt.keys())[:20])
+	        k: v for k, v in new_state_dict.items()
+	        if k in model_dict and model_dict[k].shape == v.shape
+	    }
 
         model_dict.update(pretrained_dict)
         model.load_state_dict(model_dict, strict=False)
