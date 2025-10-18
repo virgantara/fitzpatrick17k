@@ -12,6 +12,7 @@ from torchvision import transforms, models
 from sklearn.model_selection import KFold
 from sklearn.metrics import f1_score, precision_score, recall_score
 from tqdm import tqdm
+from dataset import Fitzpatrick17kDataset
 
 def set_seed(seed=42):
     random.seed(seed)
@@ -37,52 +38,6 @@ def set_seed(seed=42):
 #     zip_ref.extractall('dataset')  # Extract into 'dataset' folder
 
 
-class Fitzpatrick17kDataset(Dataset):
-    def __init__(self, csv_file, img_dir, transform=None, target_transform=None, img_ext=".jpg"):
-        """
-        Args:
-            csv_file (str): Path to the CSV file (fitzpatrick17k.csv)
-            img_dir (str): Path to the folder containing images
-            transform (callable, optional): Transform to apply to the images
-            target_transform (callable, optional): Transform to apply to labels
-            img_ext (str): Image file extension, e.g., '.jpg' or '.png'
-        """
-        self.data = pd.read_csv(csv_file)
-        self.img_dir = img_dir
-        self.transform = transform
-        self.target_transform = target_transform
-        self.img_ext = img_ext
-        self.classes = sorted(self.data['label'].unique())
-
-        self.num_classes = len(self.classes)
-
-        # Create a mapping from label string to integer
-        self.label2idx = {label: idx for idx, label in enumerate(self.classes)}
-        self.idx2label = {idx: label for label, idx in self.label2idx.items()}
-
-        # Precompute image paths and labels with tqdm
-        self.samples = []
-        for _, row in tqdm(self.data.iterrows(), total=len(self.data), desc="Loading dataset"):
-            img_name = f"{row['md5hash']}{self.img_ext}"
-            img_path = os.path.join(self.img_dir, img_name)
-            label = self.label2idx[row['label']]
-            self.samples.append((img_path, label))
-
-    def __len__(self):
-        return len(self.samples)
-
-    def __getitem__(self, idx):
-        img_path, label = self.samples[idx]
-        image = Image.open(img_path).convert("RGB")
-
-        if self.transform:
-            image = self.transform(image)
-        if self.target_transform:
-            label = self.target_transform(label)
-
-        return image, label
-
-
 
 SEED = 42
 set_seed(SEED)
@@ -91,33 +46,42 @@ csv_path = 'fitzpatrick17k.csv'
 img_dir = 'dataset/data/finalfitz17k'
 os.makedirs(img_dir, exist_ok=True)
 
-transform = transforms.Compose([
-    transforms.Resize((256, 256)),  # Resize a bit larger
-    transforms.RandomResizedCrop(224),  # Random crop to 224x224
-    transforms.RandomHorizontalFlip(p=0.5),  # Flip left/right
-    transforms.RandomRotation(degrees=15),  # Small rotation
-    transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2, hue=0.1),  # Color variation
+train_transform = transforms.Compose([
+    transforms.Resize((256, 256)),               # Resize slightly larger
+    transforms.RandomResizedCrop(224),           # Random crop
+    transforms.RandomHorizontalFlip(p=0.5),      # Flip left/right
+    transforms.RandomRotation(degrees=15),       # Random rotation
     transforms.ToTensor(),
     transforms.Normalize((0.617, 0.477, 0.423), (0.232, 0.204, 0.207)),
 ])
 
-dataset = Fitzpatrick17kDataset(
+test_transform = transforms.Compose([
+    transforms.Resize((224, 224)),               # Deterministic resize
+    transforms.ToTensor(),
+    transforms.Normalize((0.617, 0.477, 0.423), (0.232, 0.204, 0.207)),
+])
+
+
+full_dataset = Fitzpatrick17kDataset(
     csv_file=csv_path,
     img_dir=img_dir,
-    transform=transform,
+    transform=None,  # No transform yet
     img_ext=".jpg"
 )
 
 generator = torch.Generator().manual_seed(SEED)
-
-train_size = int(0.8 * len(dataset))
-test_size = len(dataset) - train_size
+train_size = int(0.8 * len(full_dataset))
+test_size = len(full_dataset) - train_size
 
 train_dataset, test_dataset = random_split(
-    dataset, 
+    full_dataset,
     [train_size, test_size],
     generator=generator
 )
+
+
+train_dataset.dataset.transform = train_transform
+test_dataset.dataset.transform = test_transform
 
 
 num_classes = dataset.num_classes
