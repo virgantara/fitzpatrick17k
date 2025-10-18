@@ -96,7 +96,46 @@ def train(args):
                              shuffle=False, num_workers=8)
 
     model = get_model(args).to(device)
-    wandb.watch(model)
+    
+
+    if args.simclr_ckpt and os.path.exists(args.simclr_ckpt):
+	    print(f"Loading pretrained SimCLR weights from {args.simclr_ckpt}")
+	    ckpt = torch.load(args.simclr_ckpt, map_location=device)
+	    
+	    # Try to load only matching keys (in case projection head differs)
+	    state_dict = ckpt.get('state_dict', ckpt)
+	    model_dict = model.state_dict()
+
+	    # Filter out unmatched keys (e.g., SimCLR projection MLP)
+	    pretrained_dict = {k.replace('backbone.', ''): v for k, v in state_dict.items()
+	                       if k.replace('backbone.', '') in model_dict and
+	                       model_dict[k.replace('backbone.', '')].shape == v.shape}
+
+	    model_dict.update(pretrained_dict)
+	    model.load_state_dict(model_dict, strict=False)
+	    print(f"Loaded {len(pretrained_dict)} matching layers from SimCLR checkpoint.")
+	else:
+	    print("No SimCLR checkpoint provided or file not found. Training from scratch.")
+
+	# --- Replace projection head with classifier ---
+	if hasattr(model, 'fc'):  # for resnet-based backbones
+	    in_features = model.fc.in_features
+	    model.fc = nn.Sequential(
+	        nn.Dropout(p=0.2),
+	        nn.Linear(in_features, args.num_classes)
+	    )
+	elif hasattr(model, 'head'):  # for VAN or ViT-style models
+	    in_features = model.head.in_features
+	    model.head = nn.Linear(in_features, args.num_classes)
+
+	# --- Optionally freeze lower layers ---
+	if args.freeze_backbone:
+	    for name, param in model.named_parameters():
+	        if 'fc' not in name and 'head' not in name:
+	            param.requires_grad = False
+	    print("Backbone frozen, training only classifier head.")
+
+	wandb.watch(model)
 
     total_params = sum(p.numel() for p in model.parameters())
     trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
