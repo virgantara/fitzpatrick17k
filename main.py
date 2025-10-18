@@ -84,39 +84,39 @@ train_dataset.dataset.transform = train_transform
 test_dataset.dataset.transform = test_transform
 
 
-num_classes = dataset.num_classes
-print("Total samples:", len(dataset))
-print("Number of classes:", dataset.num_classes)
+num_classes = full_dataset.num_classes
+print("Total samples:", len(full_dataset))
+print("Number of classes:", full_dataset.num_classes)
 # print("Classes:", dataset.classes)
-img, label = dataset[0]
+img, label = full_dataset[0]
 print("Image shape:", img.shape)
-print("Label index:", label, "->", dataset.idx2label[label])
+print("Label index:", label, "->", full_dataset.idx2label[label])
 
 
-def calc_meanstd(dataset):
-    loader = DataLoader(dataset, batch_size=64, shuffle=False, num_workers=4)
+# def calc_meanstd(dataset):
+#     loader = DataLoader(dataset, batch_size=64, shuffle=False, num_workers=4)
     
-    # Step 3: compute mean and std
-    mean = torch.zeros(3)
-    std = torch.zeros(3)
-    num_samples = 0
+#     # Step 3: compute mean and std
+#     mean = torch.zeros(3)
+#     std = torch.zeros(3)
+#     num_samples = 0
     
-    for images, _ in tqdm(loader, desc="Computing mean & std"):
-        batch_samples = images.size(0)  # number of images in batch
-        num_samples += batch_samples
+#     for images, _ in tqdm(loader, desc="Computing mean & std"):
+#         batch_samples = images.size(0)  # number of images in batch
+#         num_samples += batch_samples
     
-        # (B, C, H, W) -> sum over B,H,W
-        mean += images.sum(dim=[0, 2, 3])
-        std += (images ** 2).sum(dim=[0, 2, 3])
+#         # (B, C, H, W) -> sum over B,H,W
+#         mean += images.sum(dim=[0, 2, 3])
+#         std += (images ** 2).sum(dim=[0, 2, 3])
     
-    # Final mean and std
-    mean /= (num_samples * images.shape[2] * images.shape[3])
-    std = torch.sqrt(std / (num_samples * images.shape[2] * images.shape[3]) - mean ** 2)
+#     # Final mean and std
+#     mean /= (num_samples * images.shape[2] * images.shape[3])
+#     std = torch.sqrt(std / (num_samples * images.shape[2] * images.shape[3]) - mean ** 2)
     
-    print("Mean:", mean.tolist())
-    print("Std:", std.tolist())
+#     print("Mean:", mean.tolist())
+#     print("Std:", std.tolist())
 
-# calc_meanstd(dataset)
+# # calc_meanstd(dataset)
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
