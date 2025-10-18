@@ -227,7 +227,7 @@ def train(args):
             # 'Train Precision': train_precision,
             # 'Train Recall': train_recall,
             'Train F1': train_f1,
-            'Train Acc': train_acc
+            'Train Acc': (correct_train / total_train)
         })
 
         # --- Evaluation ---
@@ -279,7 +279,7 @@ def train(args):
             # 'Test Precision': test_precision,
             # 'Test Recall': test_recall,
             'Test F1': test_f1,
-            'Test Acc': test_acc
+            'Test Acc': (correct_test / total_test)
         })
 
         wandb.log(wandb_log)
