@@ -88,7 +88,7 @@ SEED = 42
 set_seed(SEED)
 
 csv_path = 'fitzpatrick17k.csv'
-img_dir = 'dataset/fitzpatrick17k'
+img_dir = 'dataset/data/fitzpatrick17k'
 os.makedirs(img_dir, exist_ok=True)
 
 transform = transforms.Compose([
