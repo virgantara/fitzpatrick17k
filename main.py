@@ -95,7 +95,7 @@ def train(args):
     test_loader = DataLoader(test_dataset, batch_size=args.test_batch_size,
                              shuffle=False, num_workers=8)
 
-    model = get_model(args).to(device)
+    model = get_model(args)
 
     # --- Load pretrained SimCLR model ---
     if args.simclr_ckpt and os.path.exists(args.simclr_ckpt):
@@ -137,6 +137,7 @@ def train(args):
                 param.requires_grad = False
         print("Backbone frozen, training only classifier head.")
 
+    model = model.to(device)
     wandb.watch(model)
 
     total_params = sum(p.numel() for p in model.parameters())
