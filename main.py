@@ -106,13 +106,13 @@ def train(args):
         state_dict = ckpt.get('state_dict', ckpt)
         new_state_dict = {}
 
-	    for k, v in state_dict.items():
-	        # SimCLR saves backbone.*; we only want convolutional/residual layers
-	        if k.startswith('backbone.') and not k.startswith('backbone.fc'):
-	            new_key = k[len('backbone.'):]  # remove prefix
-	            new_state_dict[new_key] = v
+        for k, v in state_dict.items():
+            # SimCLR saves backbone.*; we only want convolutional/residual layers
+            if k.startswith('backbone.') and not k.startswith('backbone.fc'):
+                new_key = k[len('backbone.'):]  # remove prefix
+                new_state_dict[new_key] = v
 
-	    model_dict = model.state_dict()
+        model_dict = model.state_dict()
 
         pretrained_dict = {
 	        k: v for k, v in new_state_dict.items()
