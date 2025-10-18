@@ -13,6 +13,8 @@ from sklearn.model_selection import KFold
 from sklearn.metrics import f1_score, precision_score, recall_score
 from tqdm import tqdm
 from dataset import Fitzpatrick17kDataset
+import gdown
+import zipfile
 
 def set_seed(seed=42):
     random.seed(seed)
@@ -22,20 +24,20 @@ def set_seed(seed=42):
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.benchmark = False
 
-# # !pip install gdown
-# import gdown
-# # url = 'https://drive.google.com/file/d/1AYMLQNb7cqNjSEXTFgqNTWthKxoRmkE9/view?usp=sharing'
+def download_dataset():
 
-# file_id = "1AYMLQNb7cqNjSEXTFgqNTWthKxoRmkE9"
-# url = f"https://drive.google.com/uc?id={file_id}"
+	# # !pip install gdown
+	# import gdown
+	# # url = 'https://drive.google.com/file/d/1AYMLQNb7cqNjSEXTFgqNTWthKxoRmkE9/view?usp=sharing'
 
-# output = "dataset.zip"  # or your file name
-# gdown.download(url, output, quiet=False)
+	file_id = "1AYMLQNb7cqNjSEXTFgqNTWthKxoRmkE9"
+	url = f"https://drive.google.com/uc?id={file_id}"
 
-# import zipfile
+	output = "dataset.zip"  # or your file name
+	gdown.download(url, output, quiet=False)
 
-# with zipfile.ZipFile(output, 'r') as zip_ref:
-#     zip_ref.extractall('dataset')  # Extract into 'dataset' folder
+	with zipfile.ZipFile(output, 'r') as zip_ref:
+	    zip_ref.extractall('dataset')  # Extract into 'dataset' folder
 
 
 
