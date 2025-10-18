@@ -148,8 +148,7 @@ def get_model(args):
             norm_layer=partial(nn.LayerNorm, eps=1e-6), depths=[3, 3, 5, 2],
             num_classes=args.num_classes)
         model.default_cfg = _cfg()
-        if pretrained:
-            model = load_model_weights(model, "van_b0", args.num_classes)
+        model = load_model_weights(model, "van_b0", args.num_classes)
         return model
 
     else:
