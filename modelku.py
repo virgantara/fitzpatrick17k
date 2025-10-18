@@ -145,10 +145,12 @@ def get_model(args):
     elif args.model_name == 'van':
         model = VAN(
             embed_dims=[32, 64, 160, 256], mlp_ratios=[8, 8, 4, 4],
-            norm_layer=partial(nn.LayerNorm, eps=1e-6), depths=[3, 3, 5, 2],args)
+            norm_layer=partial(nn.LayerNorm, eps=1e-6), depths=[3, 3, 5, 2],
+            num_classes=args.num_classes
+            **kwargs)
         model.default_cfg = _cfg()
         if pretrained:
-            model = load_model_weights(model, "van_b0", args)
+            model = load_model_weights(model, "van_b0", args.num_classes)
         return model
 
     else:

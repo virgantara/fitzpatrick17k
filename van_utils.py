@@ -176,13 +176,13 @@ def _conv_filter(state_dict, patch_size=16):
 
     return out_dict
 
-def load_model_weights(model, arch, kwargs):
+def load_model_weights(model, arch, num_classes):
     url = model_urls[arch]
     checkpoint = torch.hub.load_state_dict_from_url(
         url=url, map_location="cpu", check_hash=True
     )
     strict = True
-    if "num_classes" in kwargs and kwargs["num_classes"] != 1000:
+    if num_classes != 1000:
         strict = False
         del checkpoint["state_dict"]["head.weight"]
         del checkpoint["state_dict"]["head.bias"]
