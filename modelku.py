@@ -138,9 +138,21 @@ def get_model(args):
         )
 
     elif args.model_name == 'van':
+        embed_dims = [32, 64, 160, 256]
+        depths = [3, 3, 5, 2]
+        if args.van_arch == 'van_b1':
+            embed_dims = [64, 128, 320, 512]
+            depths = [2, 2, 4, 2]    
+        elif args.van_arch == 'van_b2':
+            embed_dims = [64, 128, 320, 512]
+            depths = [3, 3, 12, 3]
+
+        elif args.van_arch == 'van_b3':
+            embed_dims = [64, 128, 320, 512]
+            depths = [3, 5, 27, 3]            
         model = VAN(
-            embed_dims=[32, 64, 160, 256], mlp_ratios=[8, 8, 4, 4],
-            norm_layer=partial(nn.LayerNorm, eps=1e-6), depths=[3, 3, 5, 2],
+            embed_dims=embed_dims, mlp_ratios=[8, 8, 4, 4],
+            norm_layer=partial(nn.LayerNorm, eps=1e-6), depths=depths,
             num_classes=args.num_classes)
         model.default_cfg = _cfg()
         model = load_model_weights(model, "van_b0", args.num_classes)

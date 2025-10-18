@@ -321,6 +321,8 @@ if __name__ == '__main__':
     parser.add_argument('--exp_name', type=str, default='exp', help='Experiment name')
     parser.add_argument('--model_name', type=str, default='van',
                         choices=['resnet18', 'van'])
+    parser.add_argument('--van_arch', type=str, default='van_b0',
+                        choices=['van_b0', 'van_b1','van_b2','van_b3'])
     parser.add_argument('--attn_type', type=str, default='SA',
                         choices=['SA', 'LKA', 'LSKA', 'CBAM'])
     parser.add_argument('--batch_size', type=int, default=32)
