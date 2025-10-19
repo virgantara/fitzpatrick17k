@@ -325,11 +325,93 @@ def train(args):
     # plt.tight_layout()
     # plt.show()
 
+def test(args):
+    SEED = 42
+    set_seed(SEED)
+
+    test_transform = transforms.Compose([
+        transforms.Resize((224, 224)),
+        transforms.ToTensor(),
+        transforms.Normalize((0.617, 0.477, 0.423),
+                             (0.232, 0.204, 0.207)),
+    ])
+
+    # --- Dataset ---
+    fold = str(args.fold)
+    test_csv_path = f"cv_splits/test_fold{fold}.csv"
+
+
+    test_dataset = Fitzpatrick17kDataset(
+        csv_file=test_csv_path,
+        img_dir=img_dir,
+        transform=test_transform,
+        img_ext=".jpg"
+    )
+
+    num_classes = train_dataset.num_classes
+    args.num_classes = num_classes
+
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    test_loader = DataLoader(test_dataset, batch_size=args.test_batch_size,
+                             shuffle=False, num_workers=8)
+
+    model = get_model(args)
+
+    model = model.to(device)
+    model.load_state_dict(torch.load(args.model_path))
+
+
+    # --- Evaluation ---
+    model.eval()
+    correct_test, total_test = 0, 0
+    running_test_loss = 0.0
+
+    with torch.no_grad():
+        for imgs, labels in tqdm(test_loader):
+            imgs, labels = imgs.to(device), labels.to(device)
+            outputs = model(imgs)
+            loss = criterion(outputs, labels)
+            _, preds = torch.max(outputs, 1)
+
+            correct_test += (preds == labels).sum().item()
+            running_test_loss += loss.item() * imgs.size(0)
+            total_test += labels.size(0)
+
+            all_test_preds.extend(preds.cpu().numpy())
+            all_test_labels.extend(labels.cpu().numpy())
+
+    test_acc = 100 * correct_test / total_test
+    test_loss = running_test_loss / total_test
+    test_precision = precision_score(all_test_labels, all_test_preds,
+                                     average='weighted', zero_division=0)
+    test_recall = recall_score(all_test_labels, all_test_preds,
+                               average='weighted', zero_division=0)
+    test_f1 = f1_score(all_test_labels, all_test_preds,
+                       average='macro', zero_division=0)
+
+
+    # --- Save best models ---
+    if test_acc > best_acc:
+        best_acc = test_acc
+        # torch.save(model.state_dict(), best_model_path)
+        torch.save(model.state_dict(), 'checkpoints/%s/models/model_acc.t7' % args.exp_name)
+    torch.save(model.state_dict(), 'checkpoints/%s/models/model_acc_final.t7' % args.exp_name)
+
+    if test_f1 > best_f1:
+        best_f1 = test_f1
+        # torch.save(model.state_dict(), 'best_model_f1.pt')
+        torch.save(model.state_dict(), 'checkpoints/%s/models/model_f1.t7' % args.exp_name)
+    torch.save(model.state_dict(), 'checkpoints/%s/models/model_f1_final.t7' % args.exp_name)
+
+    print(f"Test Acc: {test_acc:.2f}% | Test Pre: {test_precision:.2f}% | "
+          f"Test Rec: {test_recall:.3f} | Test F1: {test_f1:.3f}")
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Skin Disease Classification')
 
     parser.add_argument('--exp_name', type=str, default='exp', help='Experiment name')
+    parser.add_argument('--model_path', type=str, default='checkpoints/exp/models/model.t7', help='Model path name')
     parser.add_argument('--model_name', type=str, default='van',
                         choices=['resnet18', 'van'])
     parser.add_argument('--van_arch', type=str, default='van_b0',
@@ -342,6 +424,9 @@ if __name__ == '__main__':
     parser.add_argument('--lr', type=float, default=0.0001)
     parser.add_argument('--momentum', type=float, default=0.9)
     parser.add_argument('--no_cuda', action='store_true')
+    parser.add_argument('--eval', action='store_true', default=False,
+                        help='Use evaluate')
+
     parser.add_argument('--seed', type=int, default=42)
     parser.add_argument('--fold', type=int, default=1)
     parser.add_argument('--simclr_ckpt', type=str, default=None,
@@ -351,4 +436,9 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
     _init_(args)
-    train(args)
+
+    if not args.eval:
+        train(args)
+    elif args.eval:
+        test(args)
+    
