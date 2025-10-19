@@ -348,7 +348,7 @@ def test(args):
         img_ext=".jpg"
     )
 
-    num_classes = train_dataset.num_classes
+    num_classes = test_dataset.num_classes
     args.num_classes = num_classes
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
