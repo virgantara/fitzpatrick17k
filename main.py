@@ -390,20 +390,6 @@ def test(args):
     test_f1 = f1_score(all_test_labels, all_test_preds,
                        average='macro', zero_division=0)
 
-
-    # --- Save best models ---
-    if test_acc > best_acc:
-        best_acc = test_acc
-        # torch.save(model.state_dict(), best_model_path)
-        torch.save(model.state_dict(), 'checkpoints/%s/models/model_acc.t7' % args.exp_name)
-    torch.save(model.state_dict(), 'checkpoints/%s/models/model_acc_final.t7' % args.exp_name)
-
-    if test_f1 > best_f1:
-        best_f1 = test_f1
-        # torch.save(model.state_dict(), 'best_model_f1.pt')
-        torch.save(model.state_dict(), 'checkpoints/%s/models/model_f1.t7' % args.exp_name)
-    torch.save(model.state_dict(), 'checkpoints/%s/models/model_f1_final.t7' % args.exp_name)
-
     print(f"Test Acc: {test_acc:.2f}% | Test Pre: {test_precision:.2f}% | "
           f"Test Rec: {test_recall:.3f} | Test F1: {test_f1:.3f}")
 
