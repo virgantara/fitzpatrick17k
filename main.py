@@ -366,6 +366,7 @@ def test(args):
     correct_test, total_test = 0, 0
     running_test_loss = 0.0
     criterion = nn.CrossEntropyLoss()
+    all_test_preds, all_test_labels = [], []
     with torch.no_grad():
         for imgs, labels in tqdm(test_loader):
             imgs, labels = imgs.to(device), labels.to(device)
