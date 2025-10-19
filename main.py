@@ -340,7 +340,7 @@ def test(args):
     fold = str(args.fold)
     test_csv_path = f"cv_splits/test_fold{fold}.csv"
 
-
+    img_dir = 'dataset/data/finalfitz17k'
     test_dataset = Fitzpatrick17kDataset(
         csv_file=test_csv_path,
         img_dir=img_dir,
