@@ -390,7 +390,7 @@ def test(args):
     test_f1 = f1_score(all_test_labels, all_test_preds,
                        average='macro', zero_division=0)
 
-    print(f"Test Acc: {test_acc:.2f}% | Test Pre: {test_precision:.2f}% | "
+    print(f"Test Acc: {test_acc:.2f}% | Test Pre: {test_precision:.2f} | "
           f"Test Rec: {test_recall:.3f} | Test F1: {test_f1:.3f}")
 
 
