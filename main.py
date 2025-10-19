@@ -48,7 +48,7 @@ def download_dataset():
 
 def train(args):
     wandb.init(project="SkinDisease", name=args.exp_name)
-    SEED = 42
+    SEED = args.seed
     set_seed(SEED)
 
     csv_path = 'fitzpatrick17k.csv'
@@ -326,7 +326,7 @@ def train(args):
     # plt.show()
 
 def test(args):
-    SEED = 42
+    SEED = args.seed
     set_seed(SEED)
 
     test_transform = transforms.Compose([
