@@ -49,4 +49,4 @@ with open(CSV_FILE, newline='', encoding='utf-8') as csvfile:
         # Download image
         download_image(url, save_path)
 
-print("✅ Download complete.")
+print(" Download complete.")
